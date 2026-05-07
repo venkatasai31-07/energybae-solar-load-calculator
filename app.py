@@ -75,10 +75,11 @@ with st.sidebar:
     
     if not api_key:
         st.info("Get your API key from [Google AI Studio](https://aistudio.google.com/)")
-    elif env_key:
+    elif api_key == env_key:
         st.success("✅ Using API Key from .env")
     else:
-        st.warning("🔑 API Key entered manually")
+        st.success("✅ Manual API Key applied")
+
 
 # Main Content
 st.write("---")
