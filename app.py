@@ -11,57 +11,67 @@ load_dotenv()
 # Page config
 st.set_page_config(page_title="EnergyBae Solar Load Calculator", layout="centered")
 
-# Custom CSS for high contrast and premium look
+# Custom CSS for a professional "Corporate Energy" look
 st.markdown("""
     <style>
     /* Main background */
     .stApp {
-        background-color: #FFFFFF;
+        background-color: #F8F9FA;
     }
     /* Headers and text visibility */
-    h1, h2, h3, p, span, label {
-        color: #1E3D59 !important;
+    h1, h2, h3 {
+        color: #1B2631 !important;
+        font-family: 'Inter', sans-serif;
     }
-    .stMarkdown p {
-        color: #1E3D59 !important;
+    p, span, label {
+        color: #2E4053 !important;
     }
-    /* Button styling */
+    /* Button styling (Primary Action) */
     .stButton>button {
         width: 100%;
         border-radius: 8px;
-        height: 3.5em;
-        background-color: #FF4B4B;
+        height: 3em;
+        background-color: #E67E22; /* Professional Solar Orange */
         color: white !important;
-        font-weight: bold;
+        font-weight: 600;
         border: none;
-        transition: 0.3s;
+        transition: 0.3s ease;
     }
     .stButton>button:hover {
-        background-color: #E03E3E;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        background-color: #D35400;
+        box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);
     }
-    /* Download button */
+    /* Download button (Success Action) */
     .stDownloadButton>button {
         width: 100%;
         border-radius: 8px;
-        height: 3.5em;
-        background-color: #28A745;
+        height: 3em;
+        background-color: #27AE60;
         color: white !important;
-        font-weight: bold;
+        font-weight: 600;
         border: none;
+    }
+    .stDownloadButton>button:hover {
+        background-color: #219150;
+        box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
     }
     /* Sidebar styling */
     section[data-testid="stSidebar"] {
-        background-color: #1E3D59;
+        background-color: #1B2631;
     }
     section[data-testid="stSidebar"] h1, 
     section[data-testid="stSidebar"] h2, 
     section[data-testid="stSidebar"] p,
     section[data-testid="stSidebar"] label {
-        color: #FFFFFF !important;
+        color: #ECF0F1 !important;
+    }
+    /* Inputs */
+    .stTextInput>div>div>input {
+        border-radius: 6px;
     }
     </style>
     """, unsafe_allow_html=True)
+
 
 # App Content
 st.title("☀️ Solar Load Calculator")
