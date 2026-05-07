@@ -91,82 +91,83 @@ if uploaded_file is not None:
     else:
         st.image(uploaded_file, caption="Uploaded Bill", use_column_width=True)
 
-    if st.button("🚀 Process Bill & Generate Excel"):
+    # Initialize session state for extracted data
+    if "extracted_data" not in st.session_state:
+        st.session_state.extracted_data = None
+
+    if st.button("🚀 Process Bill"):
         if not api_key:
             st.error("Please provide a Gemini API Key in the sidebar or .env file.")
         else:
             with st.spinner("Analyzing bill with AI..."):
                 try:
-                    # Initialize Extractor
                     extractor = BillExtractor(api_key)
-                    
-                    # Read file content
                     file_content = uploaded_file.read()
                     mime_type = uploaded_file.type
-                    
-                    # Extract Data
                     data = extractor.extract(file_content, mime_type)
                     
                     if data:
-                        st.success("✅ Data Extracted Successfully!")
-                        
-                        # Show extracted data in an editable form
-                        st.subheader("📝 Verify Extracted Data")
-                        col1, col2 = st.columns(2)
-                        
-                        with col1:
-                            name = st.text_input("Consumer Name", data.get("consumer_name", ""))
-                            c_num = st.text_input("Consumer Number", data.get("consumer_number", ""))
-                            month = st.text_input("Billing Month", data.get("billing_month", ""))
-                            load = st.text_input("Sanctioned Load", data.get("sanctioned_load", ""))
-                        
-                        with col2:
-                            units = st.number_input("Units Consumed", value=float(data.get("units_consumed", 0)) if data.get("units_consumed") else 0.0)
-                            amount = st.number_input("Bill Amount", value=float(data.get("bill_amount", 0)) if data.get("bill_amount") else 0.0)
-                            fixed = st.number_input("Fixed Charges", value=float(data.get("fixed_charges", 0)) if data.get("fixed_charges") else 0.0)
-                            conn = st.text_input("Connection Type", data.get("connection_type", ""))
-
-                        # Prepare final data
-                        final_data = {
-                            "consumer_name": name,
-                            "consumer_number": c_num,
-                            "billing_month": month,
-                            "units_consumed": units,
-                            "bill_amount": amount,
-                            "sanctioned_load": load,
-                            "fixed_charges": fixed,
-                            "connection_type": conn
-                        }
-
-                        # Generate Excel
-                        with st.spinner("Filling Excel Template..."):
-                            template_path = "templates/solar_template.xlsx"
-                            if not os.path.exists(template_path):
-                                template_path = "C:/Users/penum/.gemini/antigravity/scratch/ai/SolarLoadCalculator/templates/solar_template.xlsx"
-                            
-                            filler = ExcelFiller(template_path)
-                            
-                            # Create a temporary file for output
-                            with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
-                                output_path = tmp.name
-                            
-                            filler.fill_bill_data(final_data, output_path)
-                            
-                            with open(output_path, "rb") as f:
-                                st.download_button(
-                                    label="📥 Download Filled Excel Report",
-                                    data=f,
-                                    file_name=f"Solar_Report_{name.replace(' ', '_')}.xlsx",
-                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                )
+                        st.session_state.extracted_data = data
+                        st.success("✅ Data Extracted Successfully! Please verify below.")
                     else:
-                        st.error("Failed to extract data. Please check the API key or try a clearer image.")
+                        st.error("Failed to extract data. Please try again.")
                 except Exception as e:
-                    # Check for quota errors and explain clearly
                     if "429" in str(e):
-                        st.error("❌ Quota Exceeded: Your API key has hit its limit for today. Please wait a few minutes or try a different key.")
+                        st.error("❌ Quota Exceeded: Your API key has hit its limit.")
                     else:
                         st.error(f"An error occurred: {e}")
+
+    # Show verification UI if data is in session state
+    if st.session_state.extracted_data:
+        data = st.session_state.extracted_data
+        st.write("---")
+        st.subheader("📝 Verify Extracted Data")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            name = st.text_input("Consumer Name", data.get("consumer_name", ""))
+            c_num = st.text_input("Consumer Number", data.get("consumer_number", ""))
+            month = st.text_input("Billing Month", data.get("billing_month", ""))
+            load = st.text_input("Sanctioned Load", data.get("sanctioned_load", ""))
+        
+        with col2:
+            units = st.number_input("Units Consumed", value=float(data.get("units_consumed", 0)) if data.get("units_consumed") else 0.0)
+            amount = st.number_input("Bill Amount", value=float(data.get("bill_amount", 0)) if data.get("bill_amount") else 0.0)
+            fixed = st.number_input("Fixed Charges", value=float(data.get("fixed_charges", 0)) if data.get("fixed_charges") else 0.0)
+            conn = st.text_input("Connection Type", data.get("connection_type", ""))
+
+        final_data = {
+            "consumer_name": name,
+            "consumer_number": c_num,
+            "billing_month": month,
+            "units_consumed": units,
+            "bill_amount": amount,
+            "sanctioned_load": load,
+            "fixed_charges": fixed,
+            "connection_type": conn
+        }
+
+        if st.button("📊 Generate Solar Calculation Report"):
+            with st.spinner("Populating Excel template..."):
+                template_path = "templates/solar_template.xlsx"
+                if not os.path.exists(template_path):
+                    template_path = "C:/Users/penum/.gemini/antigravity/scratch/ai/SolarLoadCalculator/templates/solar_template.xlsx"
+                
+                filler = ExcelFiller(template_path)
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
+                    output_path = tmp.name
+                
+                filler.fill_bill_data(final_data, output_path)
+                
+                with open(output_path, "rb") as f:
+                    st.download_button(
+                        label="📥 Download Final Excel Report",
+                        data=f,
+                        file_name=f"Solar_Report_{name.replace(' ', '_')}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
+                st.success("✨ Report ready for download!")
+
 
 st.markdown("---")
 st.markdown("Developed by **Penumudi Venkata Sai** for EnergyBae AI Intern Task.")
